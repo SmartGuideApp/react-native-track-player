@@ -13,7 +13,7 @@
     "preversion": "yarn lint",
     "version": "yarn format && git add -A src",
     "postversion": "git push && git push --tags",
-    "postinstall": "git submodule update --init --recursive && yarn build"
+    "postinstall": "git submodule update --init --recursive"
   },
   "files": [
     "lib/**/*",
