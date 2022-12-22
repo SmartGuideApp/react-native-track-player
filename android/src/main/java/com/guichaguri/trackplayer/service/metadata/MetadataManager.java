@@ -46,6 +46,7 @@ public class MetadataManager {
     private long compactActions = 0;
     private SimpleTarget<Bitmap> artworkTarget;
     private NotificationCompat.Builder builder;
+    protected int previousState = PlaybackStateCompat.STATE_NONE;
 
     private Action previousAction, rewindAction, playAction, pauseAction, stopAction, forwardAction, nextAction;
 
@@ -77,7 +78,7 @@ public class MetadataManager {
 
         // Add the Uri data so apps can identify that it was a notification click
         openApp.setAction(Intent.ACTION_VIEW);
-        openApp.setData(Uri.parse("trackplayer://notification.click"));
+        openApp.setData(Uri.parse("smartguide://audio.notification.clicked"));
 
         if (Build.VERSION.SDK_INT >= 23) {
             builder.setContentIntent(PendingIntent.getActivity(context, 0, openApp, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE));
@@ -94,6 +95,8 @@ public class MetadataManager {
         // Make it visible in the lockscreen
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
     }
+
+    public NotificationCompat.Builder getBuilder() { return builder; }
 
     public MediaSessionCompat getSession() {
         return session;
@@ -154,7 +157,7 @@ public class MetadataManager {
         ratingType = options.getInt("ratingType", RatingCompat.RATING_NONE);
         session.setRatingType(ratingType);
 
-        updateNotification();
+        updateNotification(previousState);
     }
 
     public int getRatingType() {
@@ -186,7 +189,7 @@ public class MetadataManager {
         builder.setLargeIcon(bitmap);
 
         session.setMetadata(metadata.build());
-        updateNotification();
+        updateNotification(previousState);
     }
 
     /**
@@ -209,7 +212,7 @@ public class MetadataManager {
                             builder.setLargeIcon(resource);
 
                             session.setMetadata(metadata.build());
-                            updateNotification();
+                            updateNotification(previousState);
                             artworkTarget = null;
                         }
                     });
@@ -220,7 +223,7 @@ public class MetadataManager {
         builder.setSubText(track.album);
 
         session.setMetadata(metadata.build());
-        updateNotification();
+        updateNotification(previousState);
     }
 
     /**
@@ -285,13 +288,14 @@ public class MetadataManager {
         pb.setBufferedPosition(playback.getBufferedPosition());
 
         session.setPlaybackState(pb.build());
-        updateNotification();
+        updateNotification(state);
+        previousState = state;
     }
 
     public void setActive(boolean active) {
         this.session.setActive(active);
 
-        updateNotification();
+        service.startForeground(1, builder.build());
     }
 
     public void destroy() {
@@ -301,8 +305,8 @@ public class MetadataManager {
         session.release();
     }
 
-    private void updateNotification() {
-        if(session.isActive()) {
+    private void updateNotification(int state) {
+        if (Utils.isPlaying(state) || Utils.isPaused(state)) {
             service.startForeground(1, builder.build());
         } else {
             service.stopForeground(true);

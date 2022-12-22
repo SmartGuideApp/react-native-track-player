@@ -298,7 +298,10 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
         int state = getState();
 
         if(state != previousState) {
-            if(Utils.isPlaying(state) && !Utils.isPlaying(previousState)) {
+            if(Utils.hasEnded(state,previousState)) {
+                manager.onEnd(getCurrentTrack(), getPosition());
+            }
+            else if(Utils.isPlaying(state) && !Utils.isPlaying(previousState)) {
                 if (isEarPiece) {
                     manager.onPlayWithEarPiece();
                 } else {
@@ -312,10 +315,6 @@ public abstract class ExoPlayback<T extends Player> implements EventListener, Me
 
             manager.onStateChange(state);
             previousState = state;
-
-            if(state == PlaybackStateCompat.STATE_STOPPED) {
-                manager.onEnd(getCurrentTrack(), getPosition());
-            }
         }
     }
 

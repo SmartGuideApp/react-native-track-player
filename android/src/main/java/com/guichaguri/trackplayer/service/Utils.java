@@ -118,6 +118,10 @@ public class Utils {
         return state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_BUFFERING;
     }
 
+    public static boolean hasEnded(int state, int previousState) {
+        return state == PlaybackStateCompat.STATE_STOPPED && Utils.isPlaying(previousState);
+    }
+
     public static boolean isPaused(int state) {
         return state == PlaybackStateCompat.STATE_PAUSED || state == PlaybackStateCompat.STATE_CONNECTING;
     }
